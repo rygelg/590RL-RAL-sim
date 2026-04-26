@@ -41,11 +41,14 @@ export function Hero() {
       >
         On Chatbot Arena, a noise budget of{" "}
         <span className="num text-white/85">0.003%</span> — just two battles
-        out of 57,477 — is enough to unseat the top-ranked LLM. That's the
-        share of votes that could plausibly be off in any leaderboard:
-        ambiguous prompts, rater disagreement, selective reporting. Bootstrap
-        confidence intervals don't catch it. We built the leaderboard that
-        does.
+        out of 57,477 — is enough to unseat the top-ranked LLM (Huang et al.
+        2025). That's the share of votes that could plausibly be off in any
+        leaderboard: ambiguous prompts, rater disagreement, selective
+        reporting. Bootstrap confidence intervals don't catch it. The
+        playground below runs on real{" "}
+        <code className="text-white/80">arena-human-preference-140k</code>{" "}
+        votes — verify the fragility yourself, then watch our framework fix
+        it.
       </motion.p>
 
       {/* Stat strip */}

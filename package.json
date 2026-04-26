@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "prepare-data": "tsx scripts/prepare-leaderboard.ts"
+    "prepare-data": "tsx scripts/prepare-leaderboard.ts",
+    "prepare-arena": "tsx scripts/prepare-arena-140k.mts"
   },
   "dependencies": {
     "framer-motion": "^11.11.17",
@@ -27,6 +28,7 @@
     "autoprefixer": "^10.4.20",
     "eslint": "^8.57.1",
     "eslint-config-next": "14.2.30",
+    "hyparquet": "^1.25.6",
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.15",
     "tsx": "^4.19.2",

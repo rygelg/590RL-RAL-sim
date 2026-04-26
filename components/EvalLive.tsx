@@ -39,7 +39,10 @@ export interface ClaimMeta {
 
 // ---------------------------------------------------------------------------
 // Cached evaluation dataset. Same module-level instance for all three claims
-// so we don't regenerate or refit BT redundantly.
+// so we don't regenerate or refit BT redundantly. By default this returns the
+// REAL precomputed Chatbot Arena subsample bundled in
+// data/arena-real-playground.json (12 models, deterministic 1,500-vote
+// subsample of the 15.9k votes between them).
 // ---------------------------------------------------------------------------
 
 const EVAL_VOTE_COUNT = 1500;
@@ -101,8 +104,8 @@ export function EvalLive({ claims }: { claims: ClaimMeta[] }) {
         <span className="hidden sm:block h-px flex-1 bg-white/5" />
         <div className="flex items-center gap-2 text-[11px] num text-white/40 tabular-nums">
           <span>
-            synthetic 12-model Arena · {EVAL_VOTE_COUNT.toLocaleString()} votes
-            · deterministic seed
+            real 12-model Chatbot Arena · {EVAL_VOTE_COUNT.toLocaleString()}{" "}
+            votes · deterministic seed
           </span>
         </div>
       </div>
@@ -140,11 +143,13 @@ export function EvalLive({ claims }: { claims: ClaimMeta[] }) {
       </div>
 
       <p className="text-xs text-white/35 leading-relaxed max-w-3xl">
-        Why synthetic for the live demo? A 140k-vote refit + influence solve
-        per claim per pair would burn the user's CPU. The synthetic Arena is
-        calibrated to the published fragility regime, so the algorithmic
-        verdict is the same; the full 140k experiments run offline as
-        described in each card's footer and ship in the project repo.
+        Why a 1,500-vote subsample? The bundled dataset is{" "}
+        {EVAL_VOTE_COUNT.toLocaleString()} real Chatbot Arena votes from{" "}
+        <code className="text-white/55">arena-human-preference-140k</code>{" "}
+        between the 12 most-active models — fewer than the full 15.9k between
+        them, but more than enough to keep the same algorithmic verdict while
+        each card refits BT in well under a second on a laptop. The full-data
+        runs are described in each card's footer and ship in the project repo.
       </p>
     </div>
   );

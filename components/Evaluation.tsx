@@ -45,7 +45,7 @@ export function Evaluation() {
       <SectionHeader
         eyebrow="Stress-testing the loop"
         title="Three claims, three live verdicts"
-        body={`The loop above only matters if the claims behind it hold. Each component (C1 audit, C2 sampler, C3 fit) maps 1:1 to a testable claim with the same number. The full validation runs offline on lmarena-ai/arena-human-preference-140k; the same code, on a 1.5k-vote synthetic, executes here in your browser the moment you scroll.`}
+        body={`The loop above only matters if the claims behind it hold. Each component (C1 audit, C2 sampler, C3 fit) maps 1:1 to a testable claim with the same number. The full validation runs offline on the entire lmarena-ai/arena-human-preference-140k dataset; the same code, on a 1.5k-vote real-arena subsample bundled in this app, executes here in your browser the moment you scroll.`}
       />
       <EvalLive claims={claims} />
     </section>

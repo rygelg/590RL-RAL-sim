@@ -18,7 +18,7 @@ A single scrolled page with one heavy interactive demo at the center:
 1. **Hero** — the headline number, motivation, and stat strip.
 2. **Primer** — Bradley–Terry in 30 seconds, animated battle to score with the BT formula in KaTeX.
 3. **Two failure modes** — statistical fragility (Huang et al.) plus systemic bias (Singh et al.) with mini visualizations of the published numbers.
-4. **The killer demo** — a 12-model synthetic Arena leaderboard. Drag a slider to pick a drop fraction α; pick AMIP worst-case dropping vs uniform-random dropping; toggle Vanilla vs Influence-capped BT; toggle Arena-like vs MT-Bench-like presets. The leaderboard re-fits in real time, rows reorder via spring physics, the influence histogram lights up the dropped subset, and an `α_flip` column tells you which adjacent ranks are fragile, moderate, or robust.
+4. **The killer demo** — a 12-model real Chatbot Arena leaderboard. Drag a slider to pick a drop fraction α; pick AMIP worst-case dropping vs uniform-random dropping; toggle Vanilla vs Influence-capped BT; switch between real Arena votes (default) and a synthetic MT-Bench foil. The leaderboard re-fits in real time, rows reorder via spring physics, the influence histogram lights up the dropped subset, and an `α_flip` column tells you which adjacent ranks are fragile, moderate, or robust.
 5. **The proposal** — three RAL components (robustness intervals, influence-gain sampling, influence-capped BT) with an inline Recharts "sampler race" that simulates uniform vs info-gain vs influence-gain on a fresh synthetic dataset.
 6. **Evaluation plan** — the three claims (C1 calibration, C2 sampling efficiency, C3 robust aggregation) we'll test against `arena-human-preference-140k`.
 7. **Real LMSYS leaderboard panel** — opens from inside the demo. Read-only snapshot of the current Chatbot Arena leaderboard for context.
@@ -37,13 +37,27 @@ npm run dev
 
 Open [localhost:3000](http://localhost:3000).
 
-To refresh the real-leaderboard snapshot from public sources:
+To refresh the precomputed real-arena dataset from HuggingFace
+(`lmarena-ai/arena-human-preference-140k`):
 
 ```bash
-npm run prepare-data
+npm run prepare-arena
 ```
 
-The script tries the public LMSYS HuggingFace mirrors and falls back to a bundled snapshot if both are unavailable. The result is committed to `data/leaderboard-snapshot.json`, so deploys are reproducible without runtime network calls.
+This downloads only the `model_a`, `model_b`, `winner` columns from each
+parquet shard via HTTP range reads (so it's fast — under 10 seconds with a
+warm cache), fits a Bradley–Terry model on the votes between the top-12 and
+top-20 most-active models offline, and writes:
+
+- `data/arena-real-playground.json` — the 12-model, 3,000-vote subsample
+  consumed by the playground and the live evaluation cards.
+- `data/arena-real-snapshot.json` — the 20-model fit (β, CI, battles).
+- `data/leaderboard-snapshot.json` — the same 20-model fit, in the shape
+  consumed by the "Real Arena snapshot" panel UI.
+
+These outputs are committed to the repo, so deploys never depend on
+upstream availability. There is also a legacy `npm run prepare-data` for
+fetching the LMSYS leaderboard snapshot directly (kept for reference).
 
 ---
 
@@ -86,13 +100,17 @@ lib/
   bt.ts                 Bradley-Terry MLE via Newton-Raphson + 95% CI
   amip.ts               Per-vote influence + α_flip binary search + verification
   cap.ts                Influence-capped BT aggregation
-  synthetic.ts          Arena-like and MT-Bench-like dataset generators
+  synthetic.ts          Real-arena loader (default) + synthetic MT-Bench foil
   sampler.ts            Three samplers (uniform / info / influence)
 data/
-  snapshot.json         Published-finding callouts from the slide deck
-  leaderboard-snapshot.json   LMSYS Chatbot Arena snapshot (April 2026)
+  snapshot.json                    Published-finding callouts from the slide deck
+  arena-real-playground.json       Real top-12 Arena dataset (3k-vote subsample)
+  arena-real-snapshot.json         Real top-20 Arena BT fit (β, CI, battles)
+  leaderboard-snapshot.json        Same top-20 fit, UI-ready shape
 scripts/
-  prepare-leaderboard.ts      Build-time fetch with cascading fallback
+  prepare-arena-140k.mts           Precompute all real-arena outputs (HF fetch + BT fit)
+  probe-scenarios.ts               Empirically probe the four playground scenarios
+  prepare-leaderboard.ts           Legacy LMSYS leaderboard fetch (still works)
 types/
   react-katex.d.ts      Type shim
 ```
@@ -110,7 +128,7 @@ types/
 
 ## What this playground does *not* do
 
-- It does **not** bundle the raw 140k Arena dataset. The demo is synthetic, calibrated to mirror the published fragility regime. The real-leaderboard panel shows aggregated scores only (no raw votes).
+- It does **not** bundle the full 140k-vote Arena dataset; we ship a 3,000-vote real subsample of the votes between the top-12 most-active models, plus the 20-model Bradley-Terry fit derived from the larger 37k-vote subset between the top-20. The full-dataset experiments are described in the "stress-testing" section and run offline via `scripts/prepare-arena-140k.mts`.
 - It does **not** address adversarial vote rigging (Huang et al. 2025b; Min et al. 2025), prompt-conditional rankings (P2L), or judge heterogeneity. These are flagged as future work in our written report.
 - It does **not** require any API keys, accounts, or environment variables. Click and play.
 

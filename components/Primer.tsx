@@ -57,8 +57,8 @@ export function Primer() {
           </div>
           <p className="text-xs text-white/40 leading-relaxed mt-1">
             Below in the playground, the <span className="text-white/65">Dataset preset</span> lever
-            switches the regime: Arena-like (narrow gaps) vs MT-Bench-like
-            (wide gaps).
+            switches between real Chatbot Arena votes (narrow gaps, real
+            raters) and a synthetic MT-Bench foil (wide gaps, no raters).
           </p>
         </motion.div>
       </div>

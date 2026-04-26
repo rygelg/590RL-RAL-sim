@@ -34,12 +34,17 @@ export function Credits() {
             ))}
           </div>
           <div className="text-xs text-white/35 leading-relaxed border-t border-white/5 pt-5">
-            This playground is a teaching artifact. The synthetic dataset is
-            calibrated to mirror the published fragility regime of Chatbot
-            Arena (Huang et al. 2025), but the votes themselves are generated
-            and seeded for reproducibility. The real-leaderboard panel uses an
-            aggregated snapshot from the public LMSYS leaderboard. No raw
-            Arena votes are bundled.
+            The interactive playground and the three live evaluation cards run
+            on REAL Chatbot Arena votes from{" "}
+            <code className="text-white/55">
+              lmarena-ai/arena-human-preference-140k
+            </code>
+            . We precompute a Bradley–Terry fit on the 15.9k votes between the
+            top-12 most-active models, bundle a deterministic 3,000-vote
+            subsample for the slider (β / CI from the full fit, not the
+            subsample), and ship a 20-model Elo snapshot for the side-panel.
+            The MT-Bench preset is intentionally synthetic — kept as a
+            wide-gap foil to the real arena. No PII; no runtime network calls.
           </div>
         </motion.div>
 

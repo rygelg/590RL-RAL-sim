@@ -26,6 +26,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# local-only download cache for prepare-arena-140k.ts
+/.cache/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts.bak

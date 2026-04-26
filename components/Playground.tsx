@@ -200,10 +200,13 @@ export function Playground() {
           transition={{ duration: 0.5, delay: 0.12 }}
           className="text-white/55 mt-5 text-lg leading-relaxed text-pretty max-w-2xl mx-auto"
         >
-          A 12-model synthetic Arena, calibrated to the published fragility
-          regime. Below, you simulate real-world noise on a leaderboard:
-          choose the regime, choose how that noise is distributed across
-          votes, and dial how much of it there is. Every panel updates live.
+          The 12 most-active models on{" "}
+          <code className="text-white/75">lmarena-ai/arena-human-preference-140k</code>{" "}
+          — real Chatbot Arena votes, real human raters. β / 95% CI fit
+          offline on all 15.9k votes between these models; the slider runs on
+          a deterministic 3,000-vote subsample. Below, you simulate noise on
+          that real leaderboard: choose the regime, how the noise is
+          distributed, and how much of it there is. Every panel updates live.
         </motion.p>
       </div>
 
@@ -357,8 +360,8 @@ function ControlsExplained({
 }) {
   const presetEffect =
     preset === "arena"
-      ? "Top models cluster within ~30 Elo of each other, sampling is non-uniform — the regime where Arena-style fragility actually lives."
-      : "Top models are separated by 150–250 Elo and sampling is uniform — wide gaps make rank flips much harder, mirroring MT-Bench.";
+      ? "Real Chatbot Arena votes: gemini-2.5-pro, chatgpt-4o-latest, o3, gemini-2.5-flash and 8 more, with the actual matchup distribution from the dataset. The regime where Arena-style fragility lives."
+      : "Synthetic foil: top models separated by 150–250 Elo and sampling is uniform. Useful for contrast, but no real raters in the loop.";
 
   const estimatorEffect =
     estimator === "vanilla"
@@ -388,18 +391,18 @@ function ControlsExplained({
           icon={<Layers className="w-4 h-4 text-accent-cyan" />}
           variable="Dataset preset"
           question="Which leaderboard regime are we simulating?"
-          description="Switches between two synthetic 12-model datasets calibrated to published findings. Choose the regime that matches the failure mode you care about."
+          description="Arena: 12 real models with 3,000 real human votes from arena-human-preference-140k (default). MT-Bench: a synthetic foil with deliberately wide score gaps and uniform matchups, kept here for contrast."
           control={
             <SegToggle
               options={[
-                { id: "arena", label: "Arena-like (clustered top)" },
-                { id: "mtbench", label: "MT-Bench-like (wide gaps)" },
+                { id: "arena", label: "Arena · real votes" },
+                { id: "mtbench", label: "MT-Bench · synthetic" },
               ]}
               value={preset}
               onChange={(v) => setPreset(v as PresetId)}
             />
           }
-          currentValue={preset === "arena" ? "Arena-like" : "MT-Bench-like"}
+          currentValue={preset === "arena" ? "Arena · real votes" : "MT-Bench · synthetic"}
           currentEffect={presetEffect}
         />
 
@@ -625,64 +628,64 @@ function ScenarioRow({
   };
 
   // The α and outcome blurbs below are grounded in an offline probe of the
-  // exact synthetic dataset and library code (scripts/probe-scenarios.ts).
-  // Keep them in sync if the synthetic preset changes.
+  // exact runtime dataset and library code (scripts/probe-scenarios.ts).
+  // Real-arena α_flip on top pair (gemini-2.5-pro vs chatgpt-4o-latest) ≈ 1.73%.
   const scenarios: Scenario[] = [
     {
       id: "min-flip",
       eyebrow: "01 · Min flip",
-      title: "Three votes, top rank flips",
-      settings: "Arena · vanilla · AMIP · α = 0.10%",
+      title: "60 real votes flip the throne",
+      settings: "Arena · vanilla · AMIP · α = 2%",
       description:
-        "The synthetic's α_flip — minimum noise budget that overturns #1 vs #2. Same regime as the published 0.003% on real Arena (≈2 of 57,477 votes).",
-      outcome: "Top swaps · 2 of 12 moved",
+        "Just above AMIP's α_flip on this 3,000-vote real-arena subset (≈1.7%). 60 high-leverage votes is the smallest budget that produces a clean #1↔#2 swap with no collateral movement.",
+      outcome: "gemini-2.5-pro ↔ chatgpt-4o-latest",
       tone: "amber",
       state: {
         preset: "arena",
         estimator: "vanilla",
         dropMode: "amip",
-        alphaPct: 0.1,
+        alphaPct: 2,
       },
     },
     {
       id: "cascade",
       eyebrow: "02 · Cascade",
-      title: "1% noise wrecks the top half",
-      settings: "Arena · vanilla · AMIP · α = 1.0%",
+      title: "Push to 10% · top crashes 5 places",
+      settings: "Arena · vanilla · AMIP · α = 10%",
       description:
-        "10× the minimum budget. Instability spreads beyond the top pair — #1 falls three places and the entire top quartile reorders.",
-      outcome: "4 of 12 moved · max ±3",
+        "Scale the same AMIP attack to ≈6× α_flip. Instability spreads — gemini-2.5-pro falls to #6 and 6 of 12 models reorder.",
+      outcome: "gemini → #6 · 6 of 12 moved",
       tone: "rose",
       state: {
         preset: "arena",
         estimator: "vanilla",
         dropMode: "amip",
-        alphaPct: 1,
+        alphaPct: 10,
       },
     },
     {
       id: "ci-blind",
       eyebrow: "03 · CI blindspot",
-      title: "Random can't see it · 5% noise, zero movement",
-      settings: "Arena · vanilla · random · α = 5.0%",
+      title: "Same 300 votes at random · top holds",
+      settings: "Arena · vanilla · random · α = 10%",
       description:
-        "Same dataset, same number of dropped votes, but uniform-at-random — the assumption behind every bootstrap CI in the published leaderboards. 50× the AMIP-killing budget barely registers.",
-      outcome: "All 12 ranks hold",
+        "Same dataset, same 300 votes dropped — but uniform-at-random (the assumption behind every bootstrap CI). The throne is unmoved. AMIP exposes what bootstrap can't.",
+      outcome: "Top holds · 4 minor swaps",
       tone: "cyan",
       state: {
         preset: "arena",
         estimator: "vanilla",
         dropMode: "random",
-        alphaPct: 5,
+        alphaPct: 10,
       },
     },
     {
       id: "wide-gaps",
-      eyebrow: "04 · Wide gaps",
-      title: "MT-Bench regime · only the top two flinch",
-      settings: "MT-Bench · vanilla · AMIP · α = 1.0%",
+      eyebrow: "04 · Synthetic foil",
+      title: "MT-Bench shape · same fragility law",
+      settings: "MT-Bench · vanilla · AMIP · α = 1%",
       description:
-        "Same 1% AMIP attack, but on a wide-gap regime (150–250 Elo separation). #1 and #2 still swap, but the bottom ten are unmoved. Score gaps are doing real protective work.",
+        "Switch to a synthetic 12-model arena (no human raters) with a different score distribution. AMIP still flips the top on a tiny budget; bottom 10 hold. The result isn't a real-world artifact.",
       outcome: "2 of 12 moved · bottom 10 hold",
       tone: "emerald",
       state: {
@@ -1257,9 +1260,20 @@ function FootnoteBar({ dataset }: { dataset: SyntheticDataset }) {
     <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-2 text-[11px] text-white/35 num border-t border-white/5 pt-4">
       <span>{dataset.models.length} models</span>
       <span className="text-white/20">·</span>
-      <span>{dataset.votes.length.toLocaleString()} synthetic votes</span>
+      <span>
+        {dataset.votes.length.toLocaleString()}{" "}
+        {dataset.isReal ? "real votes" : "synthetic votes"}
+      </span>
       <span className="text-white/20">·</span>
       <span>seed {dataset.seed}</span>
+      {dataset.isReal && dataset.totalAvailable && (
+        <>
+          <span className="text-white/20">·</span>
+          <span>
+            of {dataset.totalAvailable.toLocaleString()} between these models
+          </span>
+        </>
+      )}
       <span className="text-white/20">·</span>
       <span className="text-white/40">{dataset.description}</span>
     </div>
