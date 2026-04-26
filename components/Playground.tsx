@@ -666,11 +666,11 @@ function ScenarioRow({
     {
       id: "ci-blind",
       eyebrow: "03 · CI blindspot",
-      title: "Same 300 votes at random · top holds",
+      title: "Same 300 votes at random · #1 holds",
       settings: "Arena · vanilla · random · α = 10%",
       description:
-        "Same dataset, same 300 votes dropped — but uniform-at-random (the assumption behind every bootstrap CI). The throne is unmoved. AMIP exposes what bootstrap can't.",
-      outcome: "Top holds · 4 minor swaps",
+        "Same dataset, same 300 dropped votes — but uniform-at-random instead of AMIP-targeted. gemini-2.5-pro keeps #1 and #4–#5 are unchanged; the perturbation only swaps adjacent pairs (o3 ↔ chatgpt-4o-latest at #2/#3, mistral ↔ gemma at #6/#7). This is exactly what bootstrap CIs already see — and exactly the noise budget AMIP's worst-case ordering used to dethrone gemini in scenarios 01–02.",
+      outcome: "#1 holds · two adjacent #2/#3, #6/#7 swaps",
       tone: "cyan",
       state: {
         preset: "arena",
