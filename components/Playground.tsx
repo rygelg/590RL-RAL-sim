@@ -24,6 +24,7 @@ import {
   ArrowDown,
   Minus,
   HelpCircle,
+  RotateCcw,
 } from "lucide-react";
 import leaderboardSnapshot from "@/data/leaderboard-snapshot.json";
 
@@ -137,12 +138,35 @@ function computeLight(heavy: HeavyState, alphaPct: number): LightState {
   };
 }
 
+// Initial state on first page load. The "Reset to default" button restores
+// the playground to exactly this configuration: real Arena, vanilla BT-MLE,
+// AMIP-ranked drop, no votes dropped yet.
+const DEFAULT_STATE = {
+  preset: "arena" as PresetId,
+  estimator: "vanilla" as Estimator,
+  dropMode: "amip" as DropMode,
+  alphaPct: 0,
+};
+
 export function Playground() {
-  const [preset, setPreset] = useState<PresetId>("arena");
-  const [estimator, setEstimator] = useState<Estimator>("vanilla");
-  const [dropMode, setDropMode] = useState<DropMode>("amip");
-  const [alphaPct, setAlphaPct] = useState(0);
+  const [preset, setPreset] = useState<PresetId>(DEFAULT_STATE.preset);
+  const [estimator, setEstimator] = useState<Estimator>(DEFAULT_STATE.estimator);
+  const [dropMode, setDropMode] = useState<DropMode>(DEFAULT_STATE.dropMode);
+  const [alphaPct, setAlphaPct] = useState(DEFAULT_STATE.alphaPct);
   const [showRealLeaderboard, setShowRealLeaderboard] = useState(false);
+
+  const isAtDefault =
+    preset === DEFAULT_STATE.preset &&
+    estimator === DEFAULT_STATE.estimator &&
+    dropMode === DEFAULT_STATE.dropMode &&
+    Math.abs(alphaPct - DEFAULT_STATE.alphaPct) < 0.0005;
+
+  function resetToDefault() {
+    setPreset(DEFAULT_STATE.preset);
+    setEstimator(DEFAULT_STATE.estimator);
+    setDropMode(DEFAULT_STATE.dropMode);
+    setAlphaPct(DEFAULT_STATE.alphaPct);
+  }
 
   const heavy = useMemo(() => computeHeavy(preset, estimator), [preset, estimator]);
 
@@ -234,6 +258,8 @@ export function Playground() {
         applyScenario={applyScenario}
         showRealLeaderboard={showRealLeaderboard}
         setShowRealLeaderboard={setShowRealLeaderboard}
+        onReset={resetToDefault}
+        isAtDefault={isAtDefault}
       />
 
       <div className="glass-strong rounded-3xl p-5 sm:p-7 lg:p-8 relative mt-6">
@@ -596,6 +622,8 @@ function ScenarioRow({
   applyScenario,
   showRealLeaderboard,
   setShowRealLeaderboard,
+  onReset,
+  isAtDefault,
 }: {
   preset: PresetId;
   estimator: Estimator;
@@ -609,6 +637,8 @@ function ScenarioRow({
   }) => void;
   showRealLeaderboard: boolean;
   setShowRealLeaderboard: (b: boolean) => void;
+  onReset: () => void;
+  isAtDefault: boolean;
 }) {
   type ScenarioTone = "amber" | "rose" | "cyan" | "emerald";
   type Scenario = {
@@ -716,6 +746,24 @@ function ScenarioRow({
           Try this · four scenarios that tell the whole story
         </span>
         <span className="h-px flex-1 bg-white/5 hidden sm:block" />
+        <button
+          onClick={onReset}
+          disabled={isAtDefault}
+          aria-label="Reset experiment to default settings (real Arena · vanilla BT · AMIP · α = 0)"
+          title={
+            isAtDefault
+              ? "Already at default: real Arena · vanilla BT · AMIP · α = 0%"
+              : "Reset to default: real Arena · vanilla BT · AMIP · α = 0%"
+          }
+          className={`text-[11px] uppercase tracking-[0.14em] num px-3 py-1.5 rounded-lg border transition-colors flex items-center gap-2 ${
+            isAtDefault
+              ? "text-white/30 border-white/5 bg-white/[0.01] cursor-not-allowed"
+              : "text-white/70 hover:text-white border-white/10 hover:border-white/20 bg-white/[0.02]"
+          }`}
+        >
+          <RotateCcw className="w-3.5 h-3.5" />
+          Reset to default
+        </button>
         <button
           onClick={() => setShowRealLeaderboard(!showRealLeaderboard)}
           className="text-[11px] uppercase tracking-[0.14em] num text-white/70 hover:text-white px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/20 transition-colors flex items-center gap-2 bg-white/[0.02]"
