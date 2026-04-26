@@ -380,6 +380,7 @@ function LiveC2Sampling({ claim }: { claim: ClaimMeta }) {
 
   return (
     <ClaimCard ref={ref} claim={claim}>
+      <SamplerLegend />
       {result ? (
         <>
           <div className="bg-ink-950/40 border border-white/5 rounded-xl p-3 h-[180px]">
@@ -445,14 +446,19 @@ function LiveC2Sampling({ claim }: { claim: ClaimMeta }) {
             </ResponsiveContainer>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-3 gap-2">
             <SmallStat
-              label="Uniform → final α"
+              label="Uniform · α after 180"
               value={`${result.finalUniform.toFixed(2)}%`}
               tone="muted"
             />
             <SmallStat
-              label="Influence → final α"
+              label="Info-gain · α after 180"
+              value={`${result.finalInfo.toFixed(2)}%`}
+              tone="cyan"
+            />
+            <SmallStat
+              label="Influence · α after 180"
               value={`${result.finalInfluence.toFixed(2)}%`}
               tone="amber"
             />
@@ -796,13 +802,15 @@ function SmallStat({
 }: {
   label: string;
   value: string;
-  tone: "muted" | "amber" | "emerald";
+  tone: "muted" | "amber" | "emerald" | "cyan";
 }) {
   const cls =
     tone === "amber"
       ? "text-accent-amber"
       : tone === "emerald"
       ? "text-accent-emerald"
+      : tone === "cyan"
+      ? "text-accent-cyan"
       : "text-white/70";
   return (
     <div className="bg-ink-950/60 border border-white/5 rounded-lg px-3 py-2">
@@ -812,6 +820,51 @@ function SmallStat({
       <div className={`num text-sm font-medium tabular-nums mt-0.5 ${cls}`}>
         {value}
       </div>
+    </div>
+  );
+}
+
+function SamplerLegend() {
+  return (
+    <div className="rounded-lg border border-white/5 bg-ink-950/40 p-3.5">
+      <div className="text-[10px] uppercase tracking-wider text-white/45 num mb-2">
+        What each sampler prefers
+      </div>
+      <ul className="space-y-1.5 text-[11.5px] text-white/65 leading-relaxed">
+        <li className="flex items-start gap-2.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-white/45 mt-[7px] shrink-0" />
+          <div>
+            <span className="text-white/90 font-medium">Uniform</span>{" "}
+            <span className="text-white/50">— every pair equally likely.</span>{" "}
+            Today's matchmaking default and the implicit assumption behind
+            bootstrap CIs.
+          </div>
+        </li>
+        <li className="flex items-start gap-2.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-accent-cyan mt-[7px] shrink-0" />
+          <div>
+            <span className="text-white/90 font-medium">Info-gain</span>{" "}
+            <span className="text-white/50">
+              — close-call, under-sampled pairs.
+            </span>{" "}
+            Weight ∝ <code className="num text-white/75">σ(z)(1−σ(z))</code> ÷{" "}
+            <code className="num text-white/75">√battles</code>. Classical
+            active learning.
+          </div>
+        </li>
+        <li className="flex items-start gap-2.5">
+          <span className="w-1.5 h-1.5 rounded-full bg-accent-amber mt-[7px] shrink-0" />
+          <div>
+            <span className="text-white/90 font-medium">Influence-gain</span>{" "}
+            <span className="text-white/50">
+              — same, narrow-gap-weighted, with a 5× boost on the rank-1 vs
+              rank-2 pair we're hardening.
+            </span>{" "}
+            Our proposal: spend votes where AMIP says they'll move{" "}
+            <code className="num text-white/75">α_flip</code> the most.
+          </div>
+        </li>
+      </ul>
     </div>
   );
 }

@@ -22,7 +22,7 @@ const claims: ClaimMeta[] = [
     statement:
       "Influence-gain sampling reaches a target α_flip with fewer new votes than information-gain or uniform sampling.",
     liveTest:
-      "Run all three samplers on the same starting fit, simulate outcomes from current BT, refit every 30 votes for a 180-vote budget.",
+      "From the same starting BT fit, each sampler queues 30 matchups its way; we draw each outcome as Bernoulli at σ(β_a−β_b), append, warm-restart BT, and recompute α_flip on the top pair. Repeat 6× for a 180-vote budget — the line that climbs fastest wins.",
     offlineTest:
       "Simulate three samplers on 140k · measure votes-to-target curves on the slowest-tightening pairs.",
   },
