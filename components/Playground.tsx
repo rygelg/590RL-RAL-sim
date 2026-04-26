@@ -627,9 +627,11 @@ function ScenarioRow({
     };
   };
 
-  // The α and outcome blurbs below are grounded in an offline probe of the
-  // exact runtime dataset and library code (scripts/probe-scenarios.ts).
-  // Real-arena α_flip on top pair (gemini-2.5-pro vs chatgpt-4o-latest) ≈ 1.73%.
+  // Each card's α, title, description, and outcome are grounded in an offline
+  // reproduction of the exact runtime path (scripts/repro-scenario.ts) on the
+  // bundled real-arena and synthetic-mtbench data. Empirical α_flip on the
+  // real-arena top pair (gemini-2.5-pro ↔ chatgpt-4o-latest) on the 3,000-vote
+  // subsample = 1.73%; on the mtbench synthetic preset α_flip = 0.10%.
   const scenarios: Scenario[] = [
     {
       id: "min-flip",
@@ -637,8 +639,8 @@ function ScenarioRow({
       title: "60 real votes flip the throne",
       settings: "Arena · vanilla · AMIP · α = 2%",
       description:
-        "Just above AMIP's α_flip on this 3,000-vote real-arena subset (≈1.7%). 60 high-leverage votes is the smallest budget that produces a clean #1↔#2 swap with no collateral movement.",
-      outcome: "gemini-2.5-pro ↔ chatgpt-4o-latest",
+        "Sit just above AMIP's α_flip on the 3,000-vote real-arena subset (≈1.73%). 60 high-leverage votes is the smallest budget that produces a clean #1↔#2 swap with zero collateral — every other rank holds. The published Chatbot Arena number is even sharper: 2 of 57,477 votes.",
+      outcome: "gemini-2.5-pro ↔ chatgpt-4o-latest · 60 votes",
       tone: "amber",
       state: {
         preset: "arena",
@@ -650,11 +652,11 @@ function ScenarioRow({
     {
       id: "cascade",
       eyebrow: "02 · Cascade",
-      title: "Push to 10% · top crashes 5 places",
+      title: "Push to 10% · throne falls 5 places",
       settings: "Arena · vanilla · AMIP · α = 10%",
       description:
-        "Scale the same AMIP attack to ≈6× α_flip. Instability spreads — gemini-2.5-pro falls to #6 and 6 of 12 models reorder.",
-      outcome: "gemini → #6 · 6 of 12 moved",
+        "Scale the same AMIP attack to ≈6× α_flip. Instability stops being local: gemini-2.5-pro slides from #1 to #6, and the entire top-6 reorders. A single coordinated noise budget is enough to make half the leaderboard unrecognisable.",
+      outcome: "gemini-2.5-pro: #1 → #6 · 6 of 12 moved",
       tone: "rose",
       state: {
         preset: "arena",
@@ -666,11 +668,11 @@ function ScenarioRow({
     {
       id: "ci-blind",
       eyebrow: "03 · CI blindspot",
-      title: "Same 300 votes at random · #1 holds",
+      title: "Same 300 votes at random · throne holds",
       settings: "Arena · vanilla · random · α = 10%",
       description:
-        "Same dataset, same 300 dropped votes — but uniform-at-random instead of AMIP-targeted. gemini-2.5-pro keeps #1 and #4–#5 are unchanged; the perturbation only swaps adjacent pairs (o3 ↔ chatgpt-4o-latest at #2/#3, mistral ↔ gemma at #6/#7). This is exactly what bootstrap CIs already see — and exactly the noise budget AMIP's worst-case ordering used to dethrone gemini in scenarios 01–02.",
-      outcome: "#1 holds · two adjacent #2/#3, #6/#7 swaps",
+        "Same dataset, same 300 dropped votes — but uniform-at-random instead of AMIP-targeted. gemini-2.5-pro keeps #1 and the leaderboard stays recognisable: only two adjacent pairs nudge by a single rank (o3 ↔ chatgpt-4o-latest at #2/#3, mistral ↔ gemma at #6/#7). Bootstrap CIs effectively assume this random regime — which is exactly why they don't see scenario 02 coming.",
+      outcome: "#1 holds · two adjacent ±1 swaps",
       tone: "cyan",
       state: {
         preset: "arena",
@@ -682,11 +684,11 @@ function ScenarioRow({
     {
       id: "wide-gaps",
       eyebrow: "04 · Synthetic foil",
-      title: "MT-Bench shape · same fragility law",
+      title: "Synthetic wide gaps · still flips on 30 votes",
       settings: "MT-Bench · vanilla · AMIP · α = 1%",
       description:
-        "Switch to a synthetic 12-model arena (no human raters) with a different score distribution. AMIP still flips the top on a tiny budget; bottom 10 hold. The result isn't a real-world artifact.",
-      outcome: "2 of 12 moved · bottom 10 hold",
+        "Switch to a synthetic 12-model arena: wide BT score gaps, uniform matchups, no human raters — the regime where leaderboards are supposedly robust. AMIP still flips the top with just 30 votes (10× the empirical α_flip of 0.10%); ranks #3–#12 all hold. Fragility isn't a real-data artifact, it's a property of BT-MLE on near-tied pairs no matter how clean the votes are.",
+      outcome: "Atlas-7 ↔ Helios-3 · 30 votes",
       tone: "emerald",
       state: {
         preset: "mtbench",
