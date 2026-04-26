@@ -236,54 +236,87 @@ export function Playground() {
 
       <RemovingVotesExplainer />
 
-      <ControlsExplained
-        preset={preset}
-        setPreset={setPreset}
-        estimator={estimator}
-        setEstimator={setEstimator}
-        dropMode={dropMode}
-        setDropMode={setDropMode}
-        alphaPct={alphaPct}
-        setAlphaPct={setAlphaPct}
-        numVotes={numVotes}
-        dropCount={dropCount}
-        flippedTop={flippedTop}
-      />
+      {/*
+       * On xl+ screens (≥1280px) the experiment is a 2-column grid: levers
+       * and scenarios on the left, live readout sticky on the right. So
+       * dragging the α slider or clicking a scenario keeps the leaderboard
+       * in view without scrolling. On narrower screens, everything stacks
+       * vertically as before. The right column has its own max-height +
+       * internal scroll so a tall readout never pushes controls off-screen.
+       */}
+      <div className="mt-5 grid xl:grid-cols-[minmax(0,1fr)_minmax(0,1.45fr)] xl:gap-6 xl:items-start">
+        <div className="space-y-5">
+          <ControlsExplained
+            preset={preset}
+            setPreset={setPreset}
+            estimator={estimator}
+            setEstimator={setEstimator}
+            dropMode={dropMode}
+            setDropMode={setDropMode}
+            alphaPct={alphaPct}
+            setAlphaPct={setAlphaPct}
+            numVotes={numVotes}
+            dropCount={dropCount}
+            flippedTop={flippedTop}
+          />
 
-      <ScenarioRow
-        preset={preset}
-        estimator={estimator}
-        dropMode={dropMode}
-        alphaPct={alphaPct}
-        applyScenario={applyScenario}
-        showRealLeaderboard={showRealLeaderboard}
-        setShowRealLeaderboard={setShowRealLeaderboard}
-        onReset={resetToDefault}
-        isAtDefault={isAtDefault}
-      />
-
-      <div className="glass-strong rounded-3xl p-5 sm:p-7 lg:p-8 relative mt-6">
-        <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
-          <div>
-            <div className="text-[11px] uppercase tracking-[0.18em] text-accent-cyan/80 num">
-              Live readout
-            </div>
-            <div className="text-white/85 text-base mt-1">
-              The leaderboard you would see right now, given your four levers.
-            </div>
-          </div>
-          <div className="text-[11px] num text-white/40 tabular-nums">
-            {dropCount.toLocaleString()} of {numVotes.toLocaleString()} votes
-            dropped
-          </div>
+          <ScenarioRow
+            preset={preset}
+            estimator={estimator}
+            dropMode={dropMode}
+            alphaPct={alphaPct}
+            applyScenario={applyScenario}
+            showRealLeaderboard={showRealLeaderboard}
+            setShowRealLeaderboard={setShowRealLeaderboard}
+            onReset={resetToDefault}
+            isAtDefault={isAtDefault}
+          />
         </div>
 
-        <div className="grid xl:grid-cols-[1fr_2.4fr] gap-5">
-          <InfluencePanel heavy={heavy} light={light} alphaPct={alphaPct} dropMode={dropMode} />
-          <LeaderboardPanel heavy={heavy} light={light} dropMode={dropMode} alphaPct={alphaPct} />
-        </div>
+        <div className="mt-6 xl:mt-0 xl:sticky xl:top-4 xl:self-start xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto xl:pr-1 scrollbar-thin">
+          <div className="glass-strong rounded-3xl p-5 sm:p-6 lg:p-7 relative">
+            <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
+              <div>
+                <div className="text-[11px] uppercase tracking-[0.18em] text-accent-cyan/80 num">
+                  Live readout
+                </div>
+                <div className="text-white/85 text-base mt-1">
+                  The leaderboard you would see right now, given your four
+                  levers.
+                </div>
+              </div>
+              <div className="text-[11px] num text-white/40 tabular-nums">
+                {dropCount.toLocaleString()} of {numVotes.toLocaleString()}{" "}
+                votes dropped
+              </div>
+            </div>
 
-        <FootnoteBar dataset={heavy.dataset} />
+            {/*
+             * Influence + Leaderboard always stack vertically inside the
+             * right column. The readout column is narrower than full-page
+             * width even on 2xl screens (because the controls take the
+             * other ~40%), so a side-by-side split makes both panels
+             * cramped. Stacked is consistent and lets the leaderboard
+             * use the full readout width.
+             */}
+            <div className="flex flex-col gap-5">
+              <InfluencePanel
+                heavy={heavy}
+                light={light}
+                alphaPct={alphaPct}
+                dropMode={dropMode}
+              />
+              <LeaderboardPanel
+                heavy={heavy}
+                light={light}
+                dropMode={dropMode}
+                alphaPct={alphaPct}
+              />
+            </div>
+
+            <FootnoteBar dataset={heavy.dataset} />
+          </div>
+        </div>
       </div>
 
       <AnimatePresence>
@@ -411,7 +444,13 @@ function ControlsExplained({
         </span>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-3">
+      {/*
+       * On xl+ the playground splits into a 2-col layout where the left
+       * column (which holds these levers) is ~480–600px wide. 2-up cards
+       * become cramped, so we drop to 1-up at xl and only restore 2-up at
+       * 2xl when there's enough room again.
+       */}
+      <div className="grid md:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2 gap-3">
         <LeverCard
           step="01"
           icon={<Layers className="w-4 h-4 text-accent-cyan" />}
@@ -584,7 +623,12 @@ function LeverCard({
       viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.45 }}
       className={`glass rounded-2xl p-5 lg:p-6 flex flex-col gap-3 ${
-        fullWidth ? "md:col-span-2" : ""
+        // Match the lever grid's column count at each breakpoint:
+        //   md (2 cols)  → span 2 (full row)
+        //   xl (1 col)   → span 1 (no col-span needed; would force an
+        //                  implicit second column otherwise)
+        //   2xl (2 cols) → span 2 again
+        fullWidth ? "md:col-span-2 xl:col-span-1 2xl:col-span-2" : ""
       }`}
     >
       <div className="flex items-baseline gap-3">
@@ -772,7 +816,13 @@ function ScenarioRow({
           Real Arena snapshot
         </button>
       </div>
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+      {/*
+       * 4-up only on lg single-column layout. Once the experiment splits
+       * into 2 cols at xl+, the scenario row shares a left column ~480–
+       * 700px wide, so 2-up reads better than 4-up. Stay 2-up at 2xl too,
+       * for the same reason — the left column never exceeds ~700px.
+       */}
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-2 gap-2.5">
         {scenarios.map((s) => (
           <ScenarioCard
             key={s.id}
@@ -1128,9 +1178,9 @@ function LeaderboardPanel({
         </div>
       </div>
 
-      {/* Header */}
+      {/* Header — column widths tuned to fit the readout column on xl+. */}
       <div
-        className="hidden sm:grid grid-cols-[28px_88px_1fr_72px_120px_180px_70px] gap-3 px-3 py-2 text-[10px] uppercase tracking-wider text-white/35 num border-b border-white/5"
+        className="hidden sm:grid grid-cols-[22px_72px_minmax(0,1fr)_56px_88px_158px_56px] gap-2 px-3 py-2 text-[10px] uppercase tracking-wider text-white/35 num border-b border-white/5"
         title="Δ rank compares each model's current rank to its rank before any votes were dropped."
       >
         <div>#</div>
@@ -1167,13 +1217,13 @@ function LeaderboardPanel({
               key={modelIdx}
               layout
               transition={{ type: "spring", stiffness: 320, damping: 30 }}
-              className={`sm:grid sm:grid-cols-[28px_88px_1fr_72px_120px_180px_70px] flex flex-wrap gap-3 items-center pl-2 pr-3 py-2.5 rounded-lg my-0.5 ${edgeClass} ${
+              className={`sm:grid sm:grid-cols-[22px_72px_minmax(0,1fr)_56px_88px_158px_56px] flex flex-wrap gap-2 items-center pl-2 pr-3 py-2.5 rounded-lg my-0.5 ${edgeClass} ${
                 isTopFlipped
                   ? "bg-gradient-to-r from-rose-500/[0.08] to-transparent"
                   : "hover:bg-white/[0.02]"
               }`}
             >
-              <div className="num text-sm text-white/40 tabular-nums w-7 pl-1">
+              <div className="num text-sm text-white/40 tabular-nums">
                 {rank + 1}
               </div>
               <div>

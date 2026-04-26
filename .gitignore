@@ -29,6 +29,9 @@ yarn-error.log*
 # local-only download cache for prepare-arena-140k.ts
 /.cache/
 
+# diagnostic screenshots from scripts/check-*.mjs
+/scripts/.shots/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts.bak
