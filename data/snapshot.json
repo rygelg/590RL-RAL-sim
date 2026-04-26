@@ -1,0 +1,93 @@
+{
+  "headlineFlip": {
+    "platform": "Chatbot Arena (Human Judge)",
+    "fractionPercent": 0.003,
+    "fractionRaw": "2 of 57,477",
+    "outcome": "Top-ranked model loses #1",
+    "source": "Huang, Burt, Hutter & Broderick (2025)",
+    "arxiv": "2508.11847"
+  },
+  "robustnessGap": [
+    { "platform": "Chatbot Arena", "alphaFlipPercent": 0.003 },
+    { "platform": "MT-Bench", "alphaFlipPercent": 18.1 }
+  ],
+  "dataAsymmetry": {
+    "audit": "~2M battles, 243 models, 42 providers",
+    "shares": [
+      { "label": "Google", "percent": 19.2 },
+      { "label": "OpenAI", "percent": 20.4 },
+      { "label": "83 open-weight models (combined)", "percent": 29.7 },
+      { "label": "Other proprietary providers", "percent": 30.7 }
+    ],
+    "source": "Singh et al. (2025) — The Leaderboard Illusion",
+    "arxiv": "2504.20879"
+  },
+  "systemicFailures": [
+    {
+      "label": "Private testing & selective disclosure",
+      "stat": "27",
+      "stat_label": "Meta variants tested before LLaMA-4 launch",
+      "detail": "Providers can test multiple private variants and only release the best."
+    },
+    {
+      "label": "Silent model deprecation",
+      "stat": "205",
+      "stat_label": "models silently removed",
+      "detail": "Removal without notification breaks the consistency of the comparison set."
+    },
+    {
+      "label": "Benchmark overfitting",
+      "stat": "112%",
+      "stat_label": "relative gain on ArenaHard from extra Arena data",
+      "detail": "Providers with more Arena data tune harder to the benchmark, not to general tasks."
+    },
+    {
+      "label": "Data-access asymmetry",
+      "stat": "~40%",
+      "stat_label": "of all votes go to two providers",
+      "detail": "Google ~19.2% + OpenAI ~20.4%, while 83 open-weight models share ~29.7%."
+    }
+  ],
+  "papers": [
+    {
+      "label": "Huang et al. (2025)",
+      "title": "Dropping Just a Handful of Preferences Can Change Top Large Language Model Rankings",
+      "arxiv": "2508.11847",
+      "role": "primary"
+    },
+    {
+      "label": "Singh et al. (2025)",
+      "title": "The Leaderboard Illusion",
+      "arxiv": "2504.20879",
+      "role": "context"
+    },
+    {
+      "label": "Broderick, Giordano & Meager (2020)",
+      "title": "An Automatic Finite-Sample Robustness Metric (AMIP)",
+      "arxiv": "2011.14999",
+      "role": "method"
+    },
+    {
+      "label": "Chiang et al. (2024)",
+      "title": "Chatbot Arena: An Open Platform for Evaluating LLMs by Human Preference",
+      "arxiv": "2403.04132",
+      "role": "platform"
+    },
+    {
+      "label": "Bradley & Terry (1952)",
+      "title": "Rank Analysis of Incomplete Block Designs",
+      "arxiv": "",
+      "role": "model"
+    }
+  ],
+  "team": {
+    "course": "MGMT 590 — LLM Alignment & Evaluation",
+    "institution": "Purdue University",
+    "presented": "April 2026",
+    "members": [
+      "Vikhyat Yashvanth Koppal",
+      "Lichen Mao",
+      "Rygel Ginete"
+    ]
+  }
+}

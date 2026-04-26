@@ -1,0 +1,13 @@
+# Source-of-truth PDFs are reference material only — not served by the app.
+*.pdf
+
+# Local-only build/dev artifacts. Vercel builds from source.
+.next/
+out/
+*.tsbuildinfo
+
+# Editor / OS noise
+.DS_Store
+.cursor/
+.vscode/
+.idea/
