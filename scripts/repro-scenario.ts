@@ -8,22 +8,28 @@
 import { generatePreset } from "../lib/synthetic";
 import { fitBT, orderFromBeta, type Vote } from "../lib/bt";
 import { alphaFlip } from "../lib/amip";
+import { capAndRefit } from "../lib/cap";
 import { rng } from "../lib/math";
 
 function reproduceScenario(label: string, opts: {
   preset: "arena" | "mtbench";
+  estimator: "vanilla" | "capped";
   dropMode: "amip" | "random";
   alphaPct: number;
 }) {
   const ds = generatePreset(opts.preset, 3000);
   const n = ds.models.length;
   const N = ds.votes.length;
-  const baseFit = fitBT(ds.votes, n);
+  const cap = opts.estimator === "capped" ? capAndRefit(ds.votes, n, 0.001) : null;
+  const baseVotes: Vote[] = cap
+    ? ds.votes.map((v, i) => (cap.cappedMask[i] ? { ...v, w: 0 } : { ...v }))
+    : ds.votes.map((v) => ({ ...v }));
+  const baseFit = cap ? cap.fit : fitBT(baseVotes, n);
   const baseOrder = orderFromBeta(baseFit.beta);
 
   const top1 = baseOrder[0];
   const top2 = baseOrder[1];
-  const topAmip = alphaFlip(baseFit, ds.votes, top1, top2, {
+  const topAmip = alphaFlip(baseFit, baseVotes, top1, top2, {
     maxFraction: 0.4,
     minStep: 1,
   });
@@ -43,9 +49,9 @@ function reproduceScenario(label: string, opts: {
       : Array.from(idx.slice(0, dropCount));
 
   const dropSet = new Set(dropIdx);
-  const newVotes: Vote[] = ds.votes.map((v, i) => ({
+  const newVotes: Vote[] = baseVotes.map((v, i) => ({
     ...v,
-    w: dropSet.has(i) ? 0 : 1,
+    w: dropSet.has(i) ? 0 : v.w ?? 1,
   }));
   const newFit = fitBT(newVotes, n, { init: baseFit.beta });
   const newOrder = orderFromBeta(newFit.beta);
@@ -60,8 +66,11 @@ function reproduceScenario(label: string, opts: {
     }
   }
 
-  console.log(`\n${label}:  ${opts.preset} · ${opts.dropMode} · α=${opts.alphaPct}% (${dropCount} of ${N} votes)`);
+  console.log(
+    `\n${label}:  ${opts.preset} · ${opts.estimator} · ${opts.dropMode} · α=${opts.alphaPct}% (${dropCount} of ${N} votes)`,
+  );
   console.log(`  base top: ${ds.models[top1].name} → post-drop top: ${ds.models[newOrder[0]].name}  ${flipped ? "*** FLIP ***" : "(hold)"}`);
+  console.log(`  α_flip(top1, top2): ${(topAmip.alpha * 100).toFixed(3)}%`);
   if (movements.length) {
     console.log("  moved:");
     for (const m of movements) console.log(`    ${m}`);
@@ -71,7 +80,7 @@ function reproduceScenario(label: string, opts: {
 }
 
 // Each one-click scenario as defined in components/Playground.tsx.
-reproduceScenario("scenario 01 · min-flip",  { preset: "arena",   dropMode: "amip",   alphaPct: 2  });
-reproduceScenario("scenario 02 · cascade",   { preset: "arena",   dropMode: "amip",   alphaPct: 10 });
-reproduceScenario("scenario 03 · ci-blind",  { preset: "arena",   dropMode: "random", alphaPct: 10 });
-reproduceScenario("scenario 04 · wide-gaps", { preset: "mtbench", dropMode: "amip",   alphaPct: 1  });
+reproduceScenario("scenario 01 · min-flip",  { preset: "arena", estimator: "vanilla", dropMode: "amip",   alphaPct: 2  });
+reproduceScenario("scenario 02 · cascade",   { preset: "arena", estimator: "vanilla", dropMode: "amip",   alphaPct: 10 });
+reproduceScenario("scenario 03 · ci-blind",  { preset: "arena", estimator: "vanilla", dropMode: "random", alphaPct: 10 });
+reproduceScenario("scenario 04 · defense",   { preset: "arena", estimator: "capped",  dropMode: "amip",   alphaPct: 2  });
