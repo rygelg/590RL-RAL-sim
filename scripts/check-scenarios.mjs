@@ -28,7 +28,7 @@ const eyebrows = [
   "01 · Min flip",
   "02 · Cascade",
   "03 · CI blindspot",
-  "04 · Synthetic foil",
+  "04 · Defense holds",
 ];
 
 for (const eyebrow of eyebrows) {

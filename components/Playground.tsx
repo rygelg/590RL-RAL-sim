@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { useMemo, useState, useDeferredValue } from "react";
+import { useMemo, useState } from "react";
 import {
   generatePreset,
   type PresetId,
@@ -10,6 +10,7 @@ import {
 import { fitBT, btCI, orderFromBeta, toElo, type BTFit, type Vote } from "@/lib/bt";
 import { alphaFlip, type AlphaFlipResult } from "@/lib/amip";
 import { capAndRefit } from "@/lib/cap";
+import { materializeBaseVotes, refitAfterDrops } from "@/lib/playground-runtime";
 import {
   playgroundScenarios,
   type DropMode,
@@ -38,6 +39,7 @@ interface HeavyState {
   preset: PresetId;
   estimator: Estimator;
   dataset: SyntheticDataset;
+  baseVotes: Vote[];
   baseFit: BTFit;
   cappedMask: Uint8Array;
   pairAlphas: number[]; // alpha_flip on adjacent pairs of base order
@@ -64,8 +66,9 @@ function computeHeavy(preset: PresetId, estimator: Estimator): HeavyState {
   const n = dataset.models.length;
 
   const capped = estimator === "capped" ? capAndRefit(dataset.votes, n, 0.001) : null;
-  const baseFit = capped ? capped.fit : fitBT(dataset.votes, n);
   const cappedMask = capped ? capped.cappedMask : new Uint8Array(dataset.votes.length);
+  const baseVotes = materializeBaseVotes(dataset.votes, cappedMask);
+  const baseFit = capped ? capped.fit : fitBT(baseVotes, n);
 
   const baseOrder = orderFromBeta(baseFit.beta);
   const ci = btCI(baseFit);
@@ -75,14 +78,14 @@ function computeHeavy(preset: PresetId, estimator: Estimator): HeavyState {
   for (let r = 0; r < baseOrder.length - 1; r++) {
     const i = baseOrder[r];
     const j = baseOrder[r + 1];
-    const result = alphaFlip(baseFit, dataset.votes, i, j, {
+    const result = alphaFlip(baseFit, baseVotes, i, j, {
       maxFraction: 0.4,
       minStep: 1,
     });
     pairAlphas.push(result.alpha);
   }
 
-  const topAmip = alphaFlip(baseFit, dataset.votes, baseOrder[0], baseOrder[1], {
+  const topAmip = alphaFlip(baseFit, baseVotes, baseOrder[0], baseOrder[1], {
     maxFraction: 0.4,
     minStep: 1,
   });
@@ -103,6 +106,7 @@ function computeHeavy(preset: PresetId, estimator: Estimator): HeavyState {
     preset,
     estimator,
     dataset,
+    baseVotes,
     baseFit,
     cappedMask,
     pairAlphas,
@@ -119,17 +123,19 @@ function computeLight(heavy: HeavyState, alphaPct: number): LightState {
   const dropCount = Math.min(N, Math.floor((alphaPct / 100) * N));
   const n = heavy.dataset.models.length;
 
-  const amipDropVotes: Vote[] = heavy.dataset.votes.map((v) => ({ ...v }));
-  for (let r = 0; r < dropCount; r++) {
-    amipDropVotes[heavy.topAmip.rankedByInfluence[r]].w = 0;
-  }
-  const postDropFit = fitBT(amipDropVotes, n, { init: heavy.baseFit.beta });
+  const postDropFit = refitAfterDrops(
+    heavy.baseVotes,
+    n,
+    heavy.topAmip.rankedByInfluence.slice(0, dropCount),
+    heavy.baseFit.beta,
+  );
 
-  const randomDropVotes: Vote[] = heavy.dataset.votes.map((v) => ({ ...v }));
-  for (let r = 0; r < dropCount; r++) {
-    randomDropVotes[heavy.randomOrder[r]].w = 0;
-  }
-  const randomDropFit = fitBT(randomDropVotes, n, { init: heavy.baseFit.beta });
+  const randomDropFit = refitAfterDrops(
+    heavy.baseVotes,
+    n,
+    heavy.randomOrder.slice(0, dropCount),
+    heavy.baseFit.beta,
+  );
 
   return {
     postDropFit,
@@ -173,8 +179,9 @@ export function Playground() {
 
   const heavy = useMemo(() => computeHeavy(preset, estimator), [preset, estimator]);
 
-  const deferredAlpha = useDeferredValue(alphaPct);
-  const light = useMemo(() => computeLight(heavy, deferredAlpha), [heavy, deferredAlpha]);
+  // Use live alphaPct for refits — deferred alpha can lag after scenario clicks
+  // (e.g. 10% → 2%) and briefly apply the wrong drop count on a new estimator.
+  const light = useMemo(() => computeLight(heavy, alphaPct), [heavy, alphaPct]);
 
   const numVotes = heavy.dataset.votes.length;
   const dropCount = Math.floor((alphaPct / 100) * numVotes);

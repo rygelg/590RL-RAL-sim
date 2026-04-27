@@ -27,7 +27,7 @@ export const playgroundScenarios: PlaygroundScenario[] = [
     title: "60 real votes flip the throne",
     settings: "Arena · vanilla · AMIP · α = 2%",
     description:
-      "Sit just above AMIP's α_flip on the 3,000-vote real-arena subset (≈1.73%). 60 high-leverage votes is the smallest budget that produces a clean #1↔#2 swap with zero collateral — every other rank holds. This is the exploit influence-capped BT is meant to blunt.",
+      "On this 3,000-vote Arena slice, AMIP puts α_flip for #1 vs #2 near 1.73% (~52 votes). The 2% slider (60 drops) sits just above that: a clean #1↔#2 swap with zero collateral — every other rank holds. That margin is the regime influence-capped BT is meant to blunt.",
     outcome: "Vanilla: gemini-2.5-pro ↔ chatgpt-4o-latest · 60 votes",
     tone: "amber",
     state: {
@@ -72,11 +72,11 @@ export const playgroundScenarios: PlaygroundScenario[] = [
   {
     id: "defense-holds",
     eyebrow: "04 · Defense holds",
-    title: "Same 60 votes no longer flip #1",
+    title: "Same 2% AMIP budget — #1 holds (capped)",
     settings: "Arena · capped · AMIP · α = 2%",
     description:
-      "Replay scenario 01 with influence-capped BT instead of vanilla BT. Capping the top 0.1% of votes by aggregate influence raises the top-pair α_flip from 1.73% to 2.07%, so the same 60-vote AMIP attack no longer clears the bar and gemini-2.5-pro stays at #1.",
-    outcome: "Capped: #1 holds at the same 60-vote budget",
+      "Replay scenario 01 with influence-capped BT. Capping the top 0.1% by aggregate influence lifts the #1–#2 α_flip from about 1.73% (~52 votes) to about 2.07% (~62 votes). The same 60-vote, 2% AMIP budget still clears vanilla’s bar but sits below the capped one — so gemini-2.5-pro keeps #1 without touching the slider.",
+    outcome: "Capped: #1 holds at 2% (60 votes)",
     tone: "emerald",
     state: {
       preset: "arena",
