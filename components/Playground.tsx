@@ -631,7 +631,7 @@ function ControlsExplained({
               <input
                 type="range"
                 min={0}
-                max={5}
+                max={10}
                 step={0.001}
                 value={alphaPct}
                 onChange={(e) => setAlphaPct(parseFloat(e.target.value))}
@@ -645,9 +645,11 @@ function ControlsExplained({
                   { v: 0.5, label: "0.5%" },
                   { v: 2.5, label: "2.5%" },
                   { v: 5, label: "5%" },
+                  { v: 10, label: "10%" },
                 ].map((m) => (
                   <button
                     key={m.label}
+                    type="button"
                     onClick={() => setAlphaPct(m.v)}
                     className={`hover:text-white transition-colors ${
                       Math.abs(alphaPct - m.v) < 0.0005
@@ -796,6 +798,7 @@ function ScenarioRow({
         </span>
         <span className="h-px flex-1 bg-white/5 hidden sm:block" />
         <button
+          type="button"
           onClick={onReset}
           disabled={isAtDefault}
           aria-label="Reset experiment to default settings (real Arena · vanilla BT · AMIP · α = 0)"
@@ -814,6 +817,7 @@ function ScenarioRow({
           Reset to default
         </button>
         <button
+          type="button"
           onClick={() => setShowRealLeaderboard(!showRealLeaderboard)}
           className="text-[11px] uppercase tracking-[0.14em] num text-white/70 hover:text-white px-3 py-1.5 rounded-lg border border-white/10 hover:border-white/20 transition-colors flex items-center gap-2 bg-white/[0.02]"
         >
@@ -884,6 +888,7 @@ function ScenarioCard({
 
   return (
     <button
+      type="button"
       onClick={onClick}
       aria-pressed={active}
       className={`text-left rounded-xl p-4 border transition-all flex flex-col gap-2 ${
@@ -941,6 +946,7 @@ function SegToggle<T extends string>({
         {options.map((opt) => (
           <button
             key={opt.id}
+            type="button"
             onClick={() => onChange(opt.id)}
             className={`px-2.5 py-1.5 text-xs num rounded-md transition-colors ${
               value === opt.id
