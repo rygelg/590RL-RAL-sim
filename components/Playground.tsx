@@ -163,6 +163,7 @@ export function Playground() {
   const [dropMode, setDropMode] = useState<DropMode>(DEFAULT_STATE.dropMode);
   const [alphaPct, setAlphaPct] = useState(DEFAULT_STATE.alphaPct);
   const [showRealLeaderboard, setShowRealLeaderboard] = useState(false);
+  const [showLongExplanations, setShowLongExplanations] = useState(false);
 
   const isAtDefault =
     preset === DEFAULT_STATE.preset &&
@@ -208,7 +209,7 @@ export function Playground() {
       id="playground"
       className="px-4 sm:px-8 lg:px-16 py-24 max-w-[1480px] mx-auto"
     >
-      <div className="text-center mb-14">
+      <div className="text-center mb-14 relative">
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -218,6 +219,32 @@ export function Playground() {
         >
           The killer demo
         </motion.div>
+
+        <div className="flex justify-center md:justify-end mt-2 md:mt-0 md:absolute md:right-0 md:top-0">
+          <button
+            type="button"
+            onClick={() => setShowLongExplanations((v) => !v)}
+            aria-pressed={showLongExplanations}
+            className={`text-[11px] uppercase tracking-[0.14em] num px-3 py-1.5 rounded-lg border transition-colors flex items-center gap-2 bg-white/[0.02] ${
+              showLongExplanations
+                ? "text-white/80 border-white/20"
+                : "text-white/55 hover:text-white/75 border-white/10 hover:border-white/20"
+            }`}
+            title={
+              showLongExplanations
+                ? "Showing longer explanations"
+                : "Show longer explanations"
+            }
+          >
+            {showLongExplanations ? (
+              <EyeOff className="w-3.5 h-3.5" />
+            ) : (
+              <Eye className="w-3.5 h-3.5" />
+            )}
+            Long explanations
+          </button>
+        </div>
+
         <motion.h2
           initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -234,17 +261,29 @@ export function Playground() {
           transition={{ duration: 0.5, delay: 0.12 }}
           className="text-white/55 mt-5 text-lg leading-relaxed text-pretty max-w-2xl mx-auto"
         >
-          The 12 most-active models on{" "}
-          <code className="text-white/75">lmarena-ai/arena-human-preference-140k</code>{" "}
-          — real Chatbot Arena votes, real human raters. β / 95% CI fit
-          offline on all 15.9k votes between these models; the slider runs on
-          a deterministic 3,000-vote subsample. Below, you simulate noise on
-          that real leaderboard: choose the regime, how the noise is
-          distributed, and how much of it there is. Every panel updates live.
+          {showLongExplanations ? (
+            <>
+              The 12 most-active models on{" "}
+              <code className="text-white/75">
+                lmarena-ai/arena-human-preference-140k
+              </code>{" "}
+              — real Chatbot Arena votes, real human raters. β / 95% CI fit
+              offline on all 15.9k votes between these models; the slider runs
+              on a deterministic 3,000-vote subsample. Below, you simulate noise
+              on that real leaderboard: choose the regime, how the noise is
+              distributed, and how much of it there is. Every panel updates
+              live.
+            </>
+          ) : (
+            <>
+              Start with real Arena votes, then drop a tiny fraction and watch
+              rankings change instantly.
+            </>
+          )}
         </motion.p>
       </div>
 
-      <RemovingVotesExplainer />
+      <RemovingVotesExplainer showLongExplanations={showLongExplanations} />
 
       {/*
        * On xl+ screens (≥1280px) the experiment is a 2-column grid: levers
@@ -268,6 +307,7 @@ export function Playground() {
             numVotes={numVotes}
             dropCount={dropCount}
             flippedTop={flippedTop}
+            showLongExplanations={showLongExplanations}
           />
 
           <ScenarioRow
@@ -280,6 +320,7 @@ export function Playground() {
             setShowRealLeaderboard={setShowRealLeaderboard}
             onReset={resetToDefault}
             isAtDefault={isAtDefault}
+            showLongExplanations={showLongExplanations}
           />
         </div>
 
@@ -315,6 +356,7 @@ export function Playground() {
                 light={light}
                 alphaPct={alphaPct}
                 dropMode={dropMode}
+                showLongExplanations={showLongExplanations}
               />
               <LeaderboardPanel
                 heavy={heavy}
@@ -338,7 +380,11 @@ export function Playground() {
   );
 }
 
-function RemovingVotesExplainer() {
+function RemovingVotesExplainer({
+  showLongExplanations,
+}: {
+  showLongExplanations: boolean;
+}) {
   const causes = [
     { label: "Voter disagreement" },
     { label: "Prompt drift" },
@@ -368,16 +414,26 @@ function RemovingVotesExplainer() {
         </div>
       </div>
       <div className="space-y-3">
-        <p className="text-sm text-white/65 leading-relaxed">
-          Real Arena-style data is never clean. Every published leaderboard
-          carries some share of votes that <span className="text-white/85">don't
-          actually represent the model's true quality</span> — voters
-          disagree, prompts drift, raters are inconsistent, bot-vote filters
-          drop battles after the fact, and operators can selectively report
-          favorable splits. <span className="text-white/85">α is your noise
-          budget.</span> α<sub>flip</sub> is the smallest noise budget that
-          changes your conclusion.
-        </p>
+        {showLongExplanations ? (
+          <p className="text-sm text-white/65 leading-relaxed">
+            Real Arena-style data is never clean. Every published leaderboard
+            carries some share of votes that{" "}
+            <span className="text-white/85">
+              don't actually represent the model's true quality
+            </span>{" "}
+            — voters disagree, prompts drift, raters are inconsistent, bot-vote
+            filters drop battles after the fact, and operators can selectively
+            report favorable splits.{" "}
+            <span className="text-white/85">α is your noise budget.</span>{" "}
+            α<sub>flip</sub> is the smallest noise budget that changes your
+            conclusion.
+          </p>
+        ) : (
+          <p className="text-sm text-white/65 leading-relaxed">
+            Treat α as a noise budget: drop that fraction of votes and see if
+            the ranking still holds.
+          </p>
+        )}
         <div className="flex flex-wrap gap-1.5">
           {causes.map((c) => (
             <span
@@ -388,15 +444,17 @@ function RemovingVotesExplainer() {
             </span>
           ))}
         </div>
-        <p className="text-xs text-white/45 leading-relaxed">
-          The two drop rules below correspond to two distinct real-world
-          stories. <span className="text-accent-amber">AMIP</span> is the
-          worst case: an adversary, a selective reporter, or any process that
-          systematically removes the highest-leverage votes.{" "}
-          <span className="text-accent-cyan">Random</span> is everyday
-          sampling noise: which voters happened to show up, what bootstrap
-          confidence intervals already assume.
-        </p>
+        {showLongExplanations && (
+          <p className="text-xs text-white/45 leading-relaxed">
+            The two drop rules below correspond to two distinct real-world
+            stories. <span className="text-accent-amber">AMIP</span> is the
+            worst case: an adversary, a selective reporter, or any process that
+            systematically removes the highest-leverage votes.{" "}
+            <span className="text-accent-cyan">Random</span> is everyday
+            sampling noise: which voters happened to show up, what bootstrap
+            confidence intervals already assume.
+          </p>
+        )}
       </div>
     </motion.div>
   );
@@ -414,6 +472,7 @@ function ControlsExplained({
   numVotes,
   dropCount,
   flippedTop,
+  showLongExplanations,
 }: {
   preset: PresetId;
   setPreset: (p: PresetId) => void;
@@ -426,6 +485,7 @@ function ControlsExplained({
   numVotes: number;
   dropCount: number;
   flippedTop: boolean;
+  showLongExplanations: boolean;
 }) {
   const presetEffect =
     preset === "arena"
@@ -466,7 +526,11 @@ function ControlsExplained({
           icon={<Layers className="w-4 h-4 text-accent-cyan" />}
           variable="Dataset preset"
           question="Which leaderboard regime are we simulating?"
-          description="Arena: 12 real models with 3,000 real human votes from arena-human-preference-140k (default). MT-Bench: a synthetic foil with deliberately wide score gaps and uniform matchups, kept here for contrast."
+          description={
+            showLongExplanations
+              ? "Arena: 12 real models with 3,000 real human votes from arena-human-preference-140k (default). MT-Bench: a synthetic foil with deliberately wide score gaps and uniform matchups, kept here for contrast."
+              : "Choose real Arena votes or a synthetic foil for contrast."
+          }
           control={
             <SegToggle
               options={[
@@ -486,7 +550,11 @@ function ControlsExplained({
           icon={<Zap className="w-4 h-4 text-accent-violet" />}
           variable="Estimator"
           question="How is the Bradley–Terry model fit?"
-          description="Vanilla BT is the standard MLE used everywhere. Influence-capped BT is one of our proposed defenses: down-weight high-leverage votes before refitting."
+          description={
+            showLongExplanations
+              ? "Vanilla BT is the standard MLE used everywhere. Influence-capped BT is one of our proposed defenses: down-weight high-leverage votes before refitting."
+              : "Standard fit vs a defense that down-weights high-leverage votes."
+          }
           control={
             <SegToggle
               options={[
@@ -508,7 +576,11 @@ function ControlsExplained({
           icon={<Crosshair className="w-4 h-4 text-accent-rose" />}
           variable="Drop rule"
           question="How is that noise distributed across votes?"
-          description="The same number of votes get perturbed either way; what changes is which ones. AMIP picks the highest-leverage ones (worst case — selective reporting, adversarial filtering). Random picks them uniformly (everyday sampling noise — what bootstrap CIs already assume)."
+          description={
+            showLongExplanations
+              ? "The same number of votes get perturbed either way; what changes is which ones. AMIP picks the highest-leverage ones (worst case — selective reporting, adversarial filtering). Random picks them uniformly (everyday sampling noise — what bootstrap CIs already assume)."
+              : "Targeted worst-case drops vs uniform random drops."
+          }
           control={
             <SegToggle
               options={[
@@ -534,7 +606,11 @@ function ControlsExplained({
             </>
           }
           question="How much noise do we allow?"
-          description="α is your noise budget — the share of votes you treat as untrustworthy. The smallest α at which the top rank flips is α_flip; for the published Arena snapshot it's 0.003% (two specific battles out of 57,477). Slide right and the leaderboard reacts in real time."
+          description={
+            showLongExplanations
+              ? "α is your noise budget — the share of votes you treat as untrustworthy. The smallest α at which the top rank flips is α_flip; for the published Arena snapshot it's 0.003% (two specific battles out of 57,477). Slide right and the leaderboard reacts in real time."
+              : "Increase α to drop more votes and see when ranks start to break."
+          }
           control={
             <div>
               <div className="flex items-baseline justify-between mb-2">
@@ -593,10 +669,16 @@ function ControlsExplained({
           }
           currentEffect={
             alphaPct === 0
-              ? "Move the slider to start removing votes. The first effects appear long before 1%."
+              ? showLongExplanations
+                ? "Move the slider to start removing votes. The first effects appear long before 1%."
+                : "Move the slider to start."
               : flippedTop
-              ? "The top rank has flipped. The model that 'won' the leaderboard a moment ago no longer does."
-              : "Top rank still holds — but watch the α_flip column on the right for the first pair to turn fragile."
+              ? showLongExplanations
+                ? "The top rank has flipped. The model that 'won' the leaderboard a moment ago no longer does."
+                : "Top rank flipped."
+              : showLongExplanations
+              ? "Top rank still holds — but watch the α_flip column on the right for the first pair to turn fragile."
+              : "Top rank still holds."
           }
           fullWidth
         />
@@ -678,6 +760,7 @@ function ScenarioRow({
   setShowRealLeaderboard,
   onReset,
   isAtDefault,
+  showLongExplanations,
 }: {
   preset: PresetId;
   estimator: Estimator;
@@ -693,6 +776,7 @@ function ScenarioRow({
   setShowRealLeaderboard: (b: boolean) => void;
   onReset: () => void;
   isAtDefault: boolean;
+  showLongExplanations: boolean;
 }) {
   function isActive(s: PlaygroundScenario) {
     return (
@@ -750,6 +834,7 @@ function ScenarioRow({
             scenario={s}
             active={isActive(s)}
             onClick={() => applyScenario(s.state)}
+            showLongExplanations={showLongExplanations}
           />
         ))}
       </div>
@@ -761,10 +846,12 @@ function ScenarioCard({
   scenario,
   active,
   onClick,
+  showLongExplanations,
 }: {
   scenario: PlaygroundScenario;
   active: boolean;
   onClick: () => void;
+  showLongExplanations: boolean;
 }) {
   // Tailwind needs literal class names, so map tone -> static classes.
   const toneStyles = {
@@ -817,7 +904,7 @@ function ScenarioCard({
         {scenario.settings}
       </div>
       <p className="text-[11.5px] text-white/55 leading-relaxed">
-        {scenario.description}
+        {showLongExplanations ? scenario.description : scenario.descriptionShort}
       </p>
       <div
         className={`mt-1 inline-flex items-center gap-1.5 self-start px-2 py-1 rounded-md border text-[11px] num ${t.pillBg}`}
@@ -874,11 +961,13 @@ function InfluencePanel({
   light,
   alphaPct,
   dropMode,
+  showLongExplanations,
 }: {
   heavy: HeavyState;
   light: LightState;
   alphaPct: number;
   dropMode: DropMode;
+  showLongExplanations: boolean;
 }) {
   const N = heavy.dataset.votes.length;
   const dropCount = Math.floor((alphaPct / 100) * N);
@@ -921,13 +1010,27 @@ function InfluencePanel({
           Influence histogram
         </div>
         <div className="text-sm text-white/60 mt-1.5 leading-snug">
-          Every vote, ranked by AMIP influence on the rank-1 vs rank-2 gap.{" "}
-          {dropMode === "amip" ? (
-            <span className="text-accent-amber">Amber band</span>
+          {showLongExplanations ? (
+            <>
+              Every vote, ranked by AMIP influence on the rank-1 vs rank-2 gap.{" "}
+              {dropMode === "amip" ? (
+                <span className="text-accent-amber">Amber band</span>
+              ) : (
+                <span className="text-white/70">Random mode</span>
+              )}{" "}
+              shows your drop-set.
+            </>
           ) : (
-            <span className="text-white/70">Random mode</span>
-          )}{" "}
-          shows your drop-set.
+            <>
+              Votes ranked by leverage;{" "}
+              {dropMode === "amip" ? (
+                <span className="text-accent-amber">amber</span>
+              ) : (
+                <span className="text-white/70">cyan</span>
+              )}{" "}
+              marks dropped votes.
+            </>
+          )}
         </div>
       </div>
 
