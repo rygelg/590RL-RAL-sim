@@ -89,6 +89,7 @@ export function Hero() {
           transition={{ duration: 0.8, ease: "easeOut", delay: 0.12 }}
           className="lg:col-span-6"
         >
+          <div className="lg:-translate-y-12 xl:-translate-y-16">
           <motion.div
             animate={{ y: [-6, 6, -6] }}
             transition={{ duration: 9, ease: "easeInOut", repeat: Infinity }}
@@ -108,6 +109,7 @@ export function Hero() {
               />
             </div>
           </motion.div>
+          </div>
         </motion.div>
       </div>
     </section>
